@@ -1,0 +1,412 @@
+
+<template>
+    <view class="index-page">
+        <!-- 面包屑 -->
+        <navbar :navbartext.sync="navbarText"></navbar>
+
+        <view class="qa-swiper {{'qa-swiper-' + serial}}">
+            <view class="qa-page" wx:for="{{qa}}" wx:for-item="q" wx:key="q.qid">
+                <!-- 问题区 -->
+                <view class="qa-area">
+                    <view class="qa-question">
+                        <text>{{q.question}}</text>
+                    </view>
+                    <radio-group class="answer-group {{qaDetail[currentQuestionId].answer ? 'answered' : ''}}" bindchange="selectAnswer">
+                        <label class="answer-item {{qaDetail[currentQuestionId].answer == a.aid ? 'answer-selected' : ''}} {{q.aid == a.aid ? 'answer-correct' : ''}}" wx:key="a.aid" wx:for="{{q.answers}}" wx:for-item="a">
+                            <radio class="answer-radio" value="{{a.aid}}" hidden="true" disabled="{{qaDetail[currentQuestionId].answer}}"/>{{a.value}}
+                        </label>
+                    </radio-group>
+                </view>
+
+                <!-- 最佳解释区 -->
+                <view hidden="{{explainHide}}" class="explain-container">
+                    <text class="explain-title">神评</text>
+                    <text class="explain-detail">$.trim方法只会去除字符串前后的空格，中间不管有几个都不会去除</text>
+                </view>
+
+                <!-- 探讨区 -->
+                <view hidden="{{explainHide}}" class="discuss-container">
+                    <text class="discuss-title">探讨区</text>
+                    <view class="discuss-list">
+                        <view class="discuss-item">
+                            <image class="discuss-tx" mode="widthFix" src="//j2.58cdn.com.cn/jxedt/mobile/mnks/images/uface/13.png?v=1477907255"/>
+                            <view class="discuss-detail">
+                                <text class="discuss-nick">老李</text>
+                                <text class="discuss-text">覆盖在原生组件之上的文本视图，可覆盖的原生组件包括map、video、canvas、camera，只支持嵌套cover-view、cover-image</text>
+                                <view class="discuss-agree">
+                                    <image class="discuss-agree-icon" mode="widthFix" src="../images/common/good.png"/>
+                                    <text>289</text>
+                                </view>
+                            </view>
+                        </view>
+                    </view>
+                </view>
+
+                <!-- 我有话说 -->
+                <form hidden="{{explainHide}}" bindsubmit="commentSubmit(101)" class="discuss-form">
+                    <text class="discuss-title">我有话说</text>
+                    <textarea class="comment-input" placeholder="说说你的见解" maxlength="140" name="comment"></textarea>
+                    <button
+                        formType="submit"
+                        class="comment-submit"
+                        hover-class="on"
+                    >提交</button>
+                </form>
+            </view>
+        </view>
+
+        <!-- 用户操作区 -->
+        <view class="index-btns-area">
+            <view class="index-btn-item" bindtap="prePage">
+                <image class="index-btn-icon" src="../images/common/pre.png"/>
+                <text class="index-btn-text">上一题</text>
+            </view>
+            <view class="index-btn-item" bindtap="nextPage">
+                <image class="index-btn-icon" src="../images/common/next.png"/>
+                <text class="index-btn-text">下一题</text>
+            </view>
+            <view class="index-btn-item" bindtap="collectQuestion">
+                <image hidden="{{!qaDetail[currentQuestionId].collected}}" class="index-btn-icon" src="../images/common/collected.png"/>
+                <image hidden="{{qaDetail[currentQuestionId].collected}}" class="index-btn-icon" src="../images/common/collect.png"/>
+                <text class="index-btn-text">收藏</text>
+            </view>
+            <view class="index-btn-item" bindtap="showExplain">
+                <image hidden="{{!explainHide}}" class="index-btn-icon" src="../images/common/explain.png"/>
+                <image hidden="{{explainHide}}" class="index-btn-icon" src="../images/common/explained.png"/>
+                <text class="index-btn-text">查看解释</text>
+            </view>
+        </view>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import Navbar from '@/components/navbar'
+import Toast from '@/mixins/toast'
+
+const initQaUrl = 'https://api.eshengeshu.com/mock/6a7a1a20300a4e52.json'
+const collectQuestionUrl = 'https://api.eshengeshu.com/mock/7b405da51409f32d.json'
+
+export default class Index extends wepy.page {
+
+    config = {
+        navigationBarTitleText: '每日3题'
+    }
+
+    components = {
+        navbar: Navbar
+    }
+
+    data = {
+        serial: 0,
+        qa: {},
+        collected: [],
+        showExplained: [],
+        qaDetail: {},
+        answers: [
+            {
+                id: '1111',
+                value: 'abc'
+            },{
+                id: '2222',
+                value: 'a bc'
+            },{
+                id: '3333',
+                value: 'a bc '
+            }
+        ]
+    }
+
+    computed = {
+        navbarText(){
+            return `前端开发 > 每日3题 > ${this.serial + 1}/3`
+        },
+        currentQuestionId(){
+            return this.qa[this.serial] && this.qa[this.serial].qid || ''
+        },
+        explainHide(){
+            if(!this.qaDetail || !this.currentQuestionId) return true
+
+            return !(this.qaDetail[this.currentQuestionId].answer || this.qaDetail[this.currentQuestionId].explained)
+        }
+    }
+
+    methods = {
+        selectAnswer(e){
+            this.qaDetail[this.currentQuestionId].answer = e.detail.value
+        },
+        commentSubmit(id, e){
+            console.log(id, e.detail.value.comment)
+        },
+        prePage(){
+            if(this.serial > 0){
+                this.serial --
+            }else{
+                Toast.open('已经是第一题啦')
+            }
+        },
+        nextPage(){
+            if(this.serial < 2){
+                this.serial ++
+            }else{
+                Toast.open('已经是最后一题啦')
+            }
+        },
+        collectQuestion(){
+            console.log(this.qaDetail[this.currentQuestionId].answer, this.qaDetail[this.currentQuestionId].explained, this.explainHide)
+            let _this = this
+            let _currentQuestionId = this.currentQuestionId
+            wx.request({
+                url: collectQuestionUrl,
+                data: {
+                    qid: _currentQuestionId
+                },
+                dataType: 'json',
+                success: res => {
+                    let _res = res.data
+                    if(_res.status == 1){
+                        if(_res.data.collected){
+                            _this.qaDetail[_currentQuestionId].collected = true
+                            _this.$apply()
+                        }else{
+                             _this.qaDetail[_currentQuestionId].collected = false
+                            _this.$apply()
+                        }
+                    }
+                }
+            })
+        },
+        showExplain(){
+            let _currentQuestionId = this.currentQuestionId
+            if(this.qaDetail[_currentQuestionId].explained){
+                this.qaDetail[_currentQuestionId].explained = false
+            }else{
+                this.qaDetail[_currentQuestionId].explained = true
+            }
+        }
+    }
+
+    onLoad(){
+        let app = this.$parent
+        let _this = this
+        wx.request({
+            url: initQaUrl,
+            data: {
+                oid: app.globalData.OCCUPATION
+            },
+            dataType: 'json',
+            success: res => {
+                let _res = res.data
+                if(_res.status == 1){
+                    _this.qa = _res.data.qa
+                    _this.qa.forEach(v => {
+                        _this.qaDetail[v.qid] = {
+                            collected: v.collected
+                        }
+                    })
+                }else{
+                    Toast.open(_res.info)
+                }
+            }
+        })
+    }
+}
+</script>
+
+<style>
+    .index-page{
+        width: 100vw;
+        overflow-x: hidden;
+    }
+    .qa-swiper{
+        display: flex;
+        width: 300vw;
+        transition: transform 0.3s ease-in-out;
+    }
+    .qa-swiper-0{
+        transform: translateX(0);
+    }
+    .qa-swiper-1{
+        transform: translateX(-100vw);
+    }
+    .qa-swiper-2{
+        transform: translateX(-200vw);
+    }
+    .qa-page{
+        flex: 1;
+        width: 100vw;
+        overflow-y: auto;
+    }
+    .qa-area{
+        width: 100%;
+        padding: 20rpx 30rpx;
+        margin: 20rpx 0;
+        background: #fff;
+        box-sizing: border-box;
+        border-top: 1rpx solid #ebebeb;
+        border-bottom: 1rpx solid #ebebeb;
+    }
+    .qa-question{
+        line-height: 40rpx;
+        margin: 0 auto 20rpx;
+        font-size: 28rpx;
+        color: #111;
+    }
+    .answer-item{
+        position: relative;
+        display: flex;
+        line-height: 40rpx;
+        padding: 25rpx 0 25rpx 50rpx;
+        font-size: 32rpx;
+        color: #333;
+    }
+    .answer-item:before{
+        content: '';
+        position: absolute;
+        width: 30rpx;
+        height: 30rpx;
+        left: 0;
+        top: 50%;
+        /* background: transparent; */
+        border-radius: 50%;
+        border: 1rpx solid #333;
+        transform: translate(0, -50%);
+    }
+    .answer-group.answered .answer-item.answer-selected:before{
+        background: #e64340 url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAA/UExURUdwTP///////////////////////////////////////////////////////////////////////////////0qNmhgAAAAUdFJOUwD6JDPlBswP8hm7b9iOn0FOrIBhtl/2ggAAAMtJREFUSMft1UsShCAMBFBARRH/9v3POrixZpwEbVcuzBLrWQGSYMwbj44Q68zXOob/xR5eN3WHRVz1lSa8/L/QoZVN5bUMQimbqkWn5SybTQR1l67ELIgyZM5SMHNeJNNgOAp3cqPFrxnQuNMqSKb/FsWFyklm2SvikjBmtIic2M0CO16u6sliNZERyQAD7ER1zwqAEzcInxi/ff6Q+avkC+ZYlmQhb+a0XfgW4xuZHxf8UFJHn9dGnz5gtZF8Y4zfeCwc/yS98aj4ABnFDG4tRh1+AAAAAElFTkSuQmCC) no-repeat center center / 80%;
+        border-color: #e64340;
+    }
+    .answer-group.answered .answer-item.answer-correct:before{
+        background: #41BC3F url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyBAMAAADsEZWCAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAwUExURUdwTP///////////////////////////////////////////////////////////0Q+7AIAAAAPdFJOUwAFDNS2GsekQeXzj1csbW6NDsUAAACESURBVDjLY2AYBUMMBC/FIcE6/wcuLf83YJdgsv+NQ4sybi3fcWopQBXg+SIA0ZKProXvfxKYVkPXwsBY/zkAROVD9SIB7v9zgaTIf0dMq9//usDA6I+pBeiG/yuwa2Fg6Pp/0P+bADYZ3vn/oQ7EAJH/vyngCH57I1xRJqEwmmyHDgAA49Im+OUAsQUAAAAASUVORK5CYII=) no-repeat center center / 120%;
+        border-color: #41BC3F;
+    }
+    /* 最佳解释区 */
+    .explain-container{
+        padding: 30rpx;
+        background: #fff;
+    }
+    .explain-title{
+        display: flex;
+        height: 45rpx;
+        margin: 0 auto 30rpx;
+        font-size: 40rpx;
+        color: #28bb82;
+    }
+
+    .explain-detail{
+        display: block;
+        line-height: 40rpx;
+        font-size: 30rpx;
+        color: #963;
+    }
+
+    /* 探讨区 */
+    .discuss-container{
+        margin: 30rpx 0 0;
+        padding: 20rpx;
+        background: #fff;
+    }
+    .discuss-title{
+        line-height: 40rpx;
+        font-size: 32rpx;
+        color: #111;
+    }
+    .discuss-item{
+        display: flex;
+        padding: 30rpx 0;
+        align-items: flex-start;
+        border-bottom: 1rpx solid #ebebeb;
+    }
+    .discuss-tx{
+        width: 100rpx;
+        height: 100rpx;
+        margin: 20rpx 30rpx 0 0;
+        border-radius: 50%;
+        overflow: hidden;
+    }
+    .discuss-detail{
+        flex: 1;
+    }
+    .discuss-nick{
+        line-height: 30rpx;
+        font-size: 30rpx;
+        color: #666;
+    }
+    .discuss-text{
+        display: block;
+        margin: 30rpx 0;
+        line-height: 40rpx;
+        font-size: 30rpx;
+        color: #111;
+        word-wrap: break-word;
+    }
+    .discuss-agree{
+        text-align: right;
+        font-size: 28rpx;
+        color: #333;
+    }
+    .discuss-agree-icon{
+        width: 30rpx;
+        margin: 0 10rpx 0 0;
+    }
+
+    /* 我有话说 */
+    .discuss-form{
+        display: block;
+        margin: 30rpx 0;
+        padding: 20rpx 20rpx 100rpx 20rpx;
+        background: #fff;
+    }
+    .discuss-form[hidden]{
+        display: none;
+    }
+
+    .comment-input{
+        width: 95%;
+        height: 250rpx;
+        padding: 20rpx;
+        margin: 20rpx auto;
+        box-sizing: border-box;
+        border: 1rpx solid #ebebeb;
+        font-size: 26rpx;
+        color: #333;
+    }
+
+    .comment-submit{
+        width: 690rpx;
+        margin: 30px auto 0;
+        background-color: #43b149;
+        color: #fff;
+    }
+
+    .comment-submit.on {
+        background: #1aad19;
+    }
+
+    /* 用户操作区 */
+    .index-btns-area{
+        position: fixed;
+        display: flex;
+        width: 100%;
+        height: 100rpx;
+        left: 0;
+        bottom: 0;
+        background: #f9f9f9;
+    }
+    .index-btn-item{
+        flex: 1;
+        text-align: center;
+    }
+    .index-btn-icon{
+        width: 60rpx;
+        height: 60rpx;
+        margin: 10rpx auto -5rpx;
+    }
+    .index-btn-text{
+        display: block;
+        margin: 0 auto;
+        line-height: 22rpx;
+        font-size: 20rpx;
+    }
+</style>
+

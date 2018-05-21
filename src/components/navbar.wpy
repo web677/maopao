@@ -1,0 +1,71 @@
+<template>
+    <view class="navbar-box">
+        <view class="navbar">
+            <text class="navbar-title">冒泡学堂</text>
+            <navigator class="navbar-account" url="/pages/center">
+                <image class="navbar-account-img" mode="widthFix" src="../images/common/account.png"/>
+            </navigator>
+        </view>
+        <view class="navbar-text">{{navbartext}}</view>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+
+    export default class List extends wepy.component {
+        props = {
+            navbartext: {
+                type: String
+            }
+        }
+    }
+</script>
+
+<style lang="less">
+    page{
+        padding-top: 190rpx;
+    }
+    .navbar-box{
+        position: fixed;
+        width: 100%;
+        height: 190rpx;
+        left: 0;
+        top: 0;
+        z-index: 100;
+    }
+    .navbar{
+        display: flex;
+        height: 100rpx;
+        padding: 0 0 0 30rpx;
+        align-items: center;
+        background: #41BC3F;
+    }
+    .navbar-title{
+        flex: 1;
+        color: #fff;
+        font-size: 36rpx;
+    }
+    .navbar-account{
+        display: flex;
+        width: 100rpx;
+        height: 100%;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+    .navbar-account-img{
+        width: 60rpx;
+    }
+    .navbar-text{
+        height: 90rpx;
+        padding: 0 30rpx;
+        background: #fff;
+        line-height: 90rpx;
+        box-sizing: border-box;
+        border-bottom: 1rpx solid #ebebeb;
+        font-size: 28rpx;
+        color: #666;
+    }
+
+</style>

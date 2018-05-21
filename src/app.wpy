@@ -1,0 +1,126 @@
+<style lang="css">
+page{
+    background: #f2f2f2;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  justify-content: start;
+  box-sizing: border-box;
+  background: #f2f2f2;
+}
+.h100{
+    height: 100vh;
+}
+</style>
+
+<script>
+import wepy from 'wepy'
+import Toast from '@/mixins/toast'
+import Cookie from '@/mixins/cookie'
+
+const mpLoginURL = 'https://api.eshengeshu.com/mock/6ef34879f38a641d.json'
+
+export default class extends wepy.app {
+    config = {
+        "pages": [
+            "pages/loading",
+            "pages/index",
+            "pages/occupation",
+            "pages/center"
+        ],
+        // "tabBar": {
+        //     "selectedColor": "#F47D43",
+        //     "list": [
+        //         {
+        //             "pagePath": "pages/index",
+        //             "text": "首页",
+        //             "iconPath": "images/common/index.png",
+        //             "selectedIconPath": "images/common/index-on.png"
+        //         },
+        //         {
+        //             "pagePath": "pages/center",
+        //             "text": "我的",
+        //             "iconPath": "images/common/account.png",
+        //             "selectedIconPath": "images/common/account-on.png"
+        //         }
+        //     ]
+        // },
+        "window": {
+            "backgroundTextStyle": "light",
+            "navigationBarBackgroundColor": "#fff",
+            "navigationBarTitleText": "冒泡学堂",
+            "navigationBarTextStyle": "black"
+        }
+    }
+
+    globalData = {
+        LOCAL_SESSION_KEY: 'SESSIONID',
+        LOCAL_SESSION: '',
+        OCCUPATION_KEY: 'OCCUPATION',
+        OCCUPATION: ''
+    }
+
+    onLaunch(){
+        Cookie.clean()
+
+        let _this = this
+        try{
+            this.globalData.LOCAL_SESSION = wx.getStorageSync(this.globalData.LOCAL_SESSION_KEY)
+            this.globalData.OCCUPATION = wx.getStorageSync(this.globalData.OCCUPATION_KEY)
+        }catch(e){
+            this.globalData.LOCAL_SESSION = ''
+            this.globalData.OCCUPATION = ''
+        }
+
+        if(!this.globalData.LOCAL_SESSION || !this.globalData.OCCUPATION){
+            wx.login({
+                success: res => {
+                    _this.mplogin(res.code)
+                }
+            })
+        }
+    }
+
+    mplogin(code){
+        let _this = this
+
+        if(!code){
+            Toast.open('登录失败，请重试')
+            return
+        }
+
+        wx.request({
+            // method: 'POST',
+            url: mpLoginURL,
+            data: {
+                code: code
+            },
+            dataType: 'json',
+            success: res => {
+                let _sessionid = res.data.data.sessionid
+                let _occupation = res.data.data.occupation
+                Cookie.set(_this.globalData.LOCAL_SESSION_KEY, _sessionid, 1/24/60)
+                    .then(data => {
+                        _this.globalData.LOCAL_SESSION = _sessionid
+                    })
+                if(!_occupation){
+                    // wx.redirectTo({
+                    //     url: '/pages/occupation'
+                    // })
+                    return
+                }
+                Cookie.set(_this.globalData.OCCUPATION_KEY, _occupation, 1/24/60)
+                    .then(data => {
+                        _this.globalData.OCCUPATION = _occupation
+                    })
+            }
+        })
+    }
+
+}
+</script>

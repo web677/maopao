@@ -1,0 +1,181 @@
+<template>
+  <!--index.wxml-->
+    <view class="container">
+        <view class="select-tips">
+            <image mode="widthFix" class="select-tips-icon" src="../images/common/atm.png" />
+            <text class="select-tips-text">请选择您所属的行业，每个账户仅有一次修改的机会</text>
+        </view>
+        <!-- 职业选择框 -->
+        <view class="occupation-box">
+            <view class="occupation-item {{selected == 1 ? 'selected' : ''}}" bindtap="selectOccupation(1)">
+                <image mode="widthFix" class="occupation-icon" src="../images/fe.png" />
+                <text class="occupation-text">前端开发</text>
+            </view>
+            <view class="occupation-item {{selected == 2 ? 'selected' : ''}}" bindtap="selectOccupation(2)">
+                <image mode="widthFix" class="occupation-icon" src="../images/php.png" />
+                <text class="occupation-text">PHP开发</text>
+            </view>
+        </view>
+
+        <!-- 职业选择提交按钮 -->
+        <button
+            class="occupation-submit-btn {{selected ? '' : 'disabled'}}" 
+            style="background-color: #43b149; color: #fff;"
+            disabled="{{!selected}}"
+            hover-class="on"
+            bindtap="confirmOccupation"
+        >选好了</button>
+    </view>
+</template>
+<script>
+import wepy from 'wepy'
+import Toast from '@/mixins/toast'
+
+const submitURL = 'https://api.eshengeshu.com/mock/6ef34879f38a641d.json'
+
+export default class Occupation extends wepy.page {
+    config = {
+        navigationBarTitleText: '选择课堂'
+    }
+
+    data = {
+        userInfo: null,
+        hasUserInfo: false,
+        selected: 0,
+        occupationMap: {
+            '1': '前端开发',
+            '2': 'PHP开发'
+        }
+    }
+
+    methods = {
+        selectOccupation: function(oid) {
+            this.selected = oid
+        },
+        confirmOccupation: function() {
+            let _this = this
+            let app = this.$parent
+            wx.showModal({
+            title: '温馨提示',
+            content: `您选择了${
+                this.data.occupationMap[this.data.selected]
+            }，每个账户仅有一次修改的机会，确认继续？`,
+            confirmText: '确认',
+            confirmColor: '#41BC3F',
+            success: function(res) {
+                if (res.confirm) {
+                    // 发起请求
+                    wepy.request({
+                        // method: 'POST',
+                        url: submitURL,
+                        data: {
+                            session_id: app.globalData.LOCAL_SESSION
+                        },
+                        dataType: 'json',
+                        success: res => {
+                            wx.redirectTo({
+                                url: '/pages/index'
+                            })
+                        }
+                    })
+                }
+            }
+            })
+        }
+    }
+
+    onLoad() {
+
+    }
+
+    
+}
+</script>
+
+<style>
+/**index.wxss**/
+.select-tips {
+    display: flex;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 50px 0 20px;
+    padding: 0 20px;
+}
+
+.select-tips-icon {
+    width: 70rpx;
+    height: 70rpx;
+}
+
+.select-tips-text {
+    flex: 1;
+    padding: 10rpx 20rpx;
+    margin: 0 40rpx;
+    line-height: 1.5;
+    border: 2px dashed #f47d43;
+    font-size: 30rpx;
+    color: #888;
+}
+
+/* 职业选择框 */
+.occupation-box {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 0;
+}
+
+.occupation-item {
+    display: inline-block;
+    width: 40%;
+    margin: 2% 5%;
+    padding: 10rpx 0;
+    background: #fff;
+    border: 2rpx solid #ebebeb;
+    border-radius: 12rpx;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.occupation-icon {
+    display: inline-block;
+    width: 140rpx;
+    height: 140rpx;
+    filter: grayscale(90%);
+    /* border-radius: 50%; */
+}
+
+.occupation-text {
+    display: block;
+    margin: 20rpx auto 10rpx;
+    font-size: 32rpx;
+    color: #b2b2b2;
+}
+
+.occupation-item.selected {
+    border-color: #f47d43;
+}
+
+.occupation-item.selected .occupation-icon {
+    filter: none;
+}
+
+.occupation-item.selected .occupation-text {
+    color: #f47d43;
+}
+
+/* 职业提交 */
+
+.occupation-submit-btn {
+    width: 690rpx;
+    margin: 100px auto 50px;
+}
+
+.occupation-submit-btn.on {
+    background: #1aad19!important;
+}
+
+.occupation-submit-btn.disabled {
+    opacity: 0.7;
+}
+
+</style>

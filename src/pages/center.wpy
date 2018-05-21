@@ -1,0 +1,33 @@
+<style lang="less">
+  
+</style>
+<template>
+  <view class="container">
+    center
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+
+  export default class Index extends wepy.page {
+    config = {
+      navigationBarTitleText: 'test'
+    }
+    components = {
+
+    }
+
+    data = {
+
+    }
+
+    methods = {
+
+    }
+
+    onLoad() {
+
+    }
+  }
+</script>
